@@ -1,6 +1,6 @@
 const auth = {
     showLoginPage: true,
-    userLogin : false
+    userLogin : false ,
   };
   
   const authPageReducer = (state = auth, action) => {
@@ -9,9 +9,10 @@ const auth = {
           showLoginPage: !state.showLoginPage,
       };
     }
-    if (action.type === "showLoginPage") {
+   
+    if (action.type === "enter") {
       return {
-          showLoginPage: !state.showLoginPage,
+        userLogin: true,
       };
     }
     return state

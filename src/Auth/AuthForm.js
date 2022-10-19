@@ -7,7 +7,13 @@ export default function AuthForm() {
   const password = useRef();
   const conPassword = useRef();
   // -------------------for triger and get redux state (useSelector ,useDispatch)---------------------//
-  const isLogin = useSelector((state) => state.authPage.showLoginPage);
+  const globalStore = useSelector((state) => {
+    return {
+      isLogin: state.authPage.showLoginPage,
+       tokenId : state.token.tokenId
+    };
+  });
+  console.log(globalStore)
   const dispatch = useDispatch();
   function changeAuthPage() {
     dispatch({ type: "showSignupPage" });
@@ -16,7 +22,8 @@ export default function AuthForm() {
     event.preventDefault();
     const enteredEmail = email.current.value;
     const enteredPassword = password.current.value;
-    if (isLogin) {
+    // ----------------------------------Log-In(firbase)----------------------------------//
+    if (globalStore.isLogin) {
       fetch(
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBoRlualxztzphJyEheAtArD6hJ7SrPdSc",
         {
@@ -29,13 +36,20 @@ export default function AuthForm() {
         }
       ).then((res) => {
         if (res.ok) {
-            alert("you are log in ")
-          res.json().then((data) => console.log(data.idToken));
+          dispatch({ type: "enter" });
+          alert("you are log in ");
+          res.json().then((data) => {
+            globalStore.tokenId.push(data.idToken)
+            localStorage.setItem('tokenId', JSON.stringify(data.idToken));
+
+          });
         } else {
           res.json().then((data) => alert(data.error.message));
         }
       });
-    } else {
+    }
+    // ----------------------------------Sing-Up(firbase)----------------------------------//
+    else {
       const enteredconPassword = conPassword.current.value;
       if (enteredPassword === enteredconPassword) {
         alert("password not match");
@@ -55,7 +69,11 @@ export default function AuthForm() {
         if (res.ok) {
           console.log("User has successfully signed up.");
           alert("Sign-up successfully ");
-          res.json().then((data) => console.log(data.idToken));
+          dispatch({ type: "enter" });
+          res.json().then((data) => {
+            globalStore.tokenId.push(data.idToken)
+            localStorage.setItem('tokenId', JSON.stringify(data.idToken));
+           });
         } else {
           res.json().then((data) => alert(data.error.message));
         }
@@ -64,11 +82,11 @@ export default function AuthForm() {
   }
   return (
     <div>
-      <form onSubmit={sendFormData}>
-        <h1>{isLogin ? "Login" : "signUp"}</h1>
+      <form>
+        <h1>{globalStore.isLogin ? "Login" : "signUp"}</h1>
         <input type="text" placeholder="Email" required ref={email} />
         <input type="password" placeholder="Password" required ref={password} />
-        {!isLogin && (
+        {!globalStore.isLogin && (
           <input
             type="password"
             placeholder="confirm Password"
@@ -76,10 +94,12 @@ export default function AuthForm() {
             ref={conPassword}
           />
         )}
-        <button>{isLogin ? "Login" : "Sign-Up"}</button>
-        {isLogin && <Link to="/forgot">forgot ?</Link>}
+        <button onClick={sendFormData}>
+          {globalStore.isLogin ? "Login" : "Sign-Up"}
+        </button>
+        {globalStore.isLogin && <Link to="/forgot">forgot ?</Link>}
         <button onClick={() => changeAuthPage()}>
-          {isLogin
+          {globalStore.isLogin
             ? "create new account? sign-up now "
             : "Already have account ! login now "}
         </button>
