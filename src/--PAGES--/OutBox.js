@@ -1,59 +1,43 @@
 import React, { useEffect } from "react";
-import "./Homepage.css";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  Link,
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect,
-} from "react-router-dom";
-import { inboxActions } from "../Store/InboxReducer";
-import { openMailActions } from "../Store/OpenMailReducer";
-import inboxMail from "./InboxMail";
-export default function Homepage() {
+import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
+import "./OutBox.css";
+import { composeActions } from "../Store/ComposeReducer";
+export default function OutBox() {
   const dispatch = useDispatch();
-  const loginEmail = JSON.parse(localStorage.getItem("userEmail"));
-  let userEmail = loginEmail.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
-  console.log(userEmail);
-  const inboxMails = useSelector((state) => state.inbox.inboxList);
-  console.log(inboxMails);
-  useEffect(() => {
-    fetch(
-      `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${userEmail}.json`
-    ).then((res) => {
-      if (res.ok) {
-        res.json().then((data) => {
-          let arr = [];
-          {
-            for (let keys in data) {
-              let obj = {
-                ...data[keys],
-                id: keys,
-              };
-              console.log(arr);
-              arr.push(obj);
+  const resiveMail = useSelector((state) => state.compose.list);
+  const emailId = useSelector((state) => state.auth.loginEmail);
+  let sentEmail = emailId.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
+  console.log(resiveMail);
+  // console.log(globalStore.emails);
+    useEffect(() => {
+      fetch(
+        `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${sentEmail}.json`
+      ).then((res) => {
+        if (res.ok) {
+          res.json().then((data) => {
+            let arr = [];
+            {
+              for (let keys in data) {
+                let obj = {
+                  ...data[keys],
+                  id: keys,
+                };
+                arr.push(obj);
+              }
+              dispatch(composeActions.updateList([...arr]));
+              // console.log(obj);
             }
-            dispatch(inboxActions.updateInboxList([...arr]));
-          }
-        });
-      } else {
-        res.json().then((data) => console.log(data));
-      }
-    });
-  }, []);
-  function userClickOnMail(emailFrom, subject, text) {
-    let obj = {
-      emailFrom: emailFrom,
-      subject: subject,
-      text: text,
-    };
-    dispatch(openMailActions.updateopenMailValue(obj));
-  }
-  function logOut() {
-    localStorage.clear();
-    window.location.reload();
-  }
+          });
+        } else {
+          res.json().then((data) => console.log(data));
+        }
+      });
+    }, []);
+    function logOut() {
+      localStorage.clear();
+      window.location.reload();
+    }
   return (
     <div className="container">
       <div className="mail-box">
@@ -89,7 +73,7 @@ export default function Homepage() {
               </Link>
             </li>
             <li>
-              <Link to="/sent">Sent Mail</Link>
+              <Link to="#">Sent Mail</Link>
             </li>
             <li>
               <Link to="#">Important</Link>
@@ -115,9 +99,9 @@ export default function Homepage() {
             <h3>Inbox</h3>
           </div>
 
-          <Link to="/showMsg" ><table className="table table-inbox table-hover" >
+          <table className="table table-inbox table-hover">
             <tbody>
-              {inboxMails.map((item) => {
+              {resiveMail.map((item) => {
                 return (
                   <>
                     <tr className="unread">
@@ -125,7 +109,7 @@ export default function Homepage() {
                         <input type="checkbox" className="mail-checkbox" />
                       </td>
                       <td className="inbox-small-cells"></td>
-                      <td className="view-message  dont-show">{item.emailFrom}</td>
+                      <td className="view-message  dont-show">To : {item.emailFrom}</td>
                       <td className="view-message ">
                        {item.subject}
                       </td>
@@ -136,7 +120,7 @@ export default function Homepage() {
                 );
               })}
             </tbody>
-          </table></Link>
+          </table>
         </aside>
       </div>
     </div>

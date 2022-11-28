@@ -1,109 +1,153 @@
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { authActions } from "../Store/AuthReducer";
+import { composeActions } from "../Store/ComposeReducer";
 export default function AuthForm() {
-  // -------------------for input use useRef---------------------//
+  const [isLogin, setIsLogin] = useState(true);
   const email = useRef();
   const password = useRef();
   const conPassword = useRef();
-  // -------------------for triger and get redux state (useSelector ,useDispatch)---------------------//
-  const globalStore = useSelector((state) => {
-    return {
-      isLogin: state.authPage.showLoginPage,
-       tokenId : state.token.tokenId
-    };
-  });
-  console.log(globalStore)
-  const dispatch = useDispatch();
-  function changeAuthPage() {
-    dispatch({ type: "showSignupPage" });
+  const passwordEmail = useRef();
+  let dispatch = useDispatch();
+  const forgotPassword = useSelector((state) => state.auth.forgotPassword);
+  const x = useSelector((state) => state);
+  console.log(x);
+
+  function changeLoginState() {
+    setIsLogin((pre) => !pre);
   }
-  function sendFormData(event) {
+  function formHandler(event) {
     event.preventDefault();
-    const enteredEmail = email.current.value;
-    const enteredPassword = password.current.value;
-    // ----------------------------------Log-In(firbase)----------------------------------//
-    if (globalStore.isLogin) {
+
+    let emailEntered = email.current.value;
+    let passwordEntered = password.current.value;
+
+    if (isLogin) {
       fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBoRlualxztzphJyEheAtArD6hJ7SrPdSc",
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC1Vr94fVHuelrVU6rME2nh0CZCazXFuSQ",
         {
           method: "POST",
           body: JSON.stringify({
-            email: enteredEmail,
-            password: enteredPassword,
+            email: emailEntered,
+            password: passwordEntered,
             returnSecureToken: true,
           }),
         }
       ).then((res) => {
         if (res.ok) {
-          dispatch({ type: "enter" });
-          alert("you are log in ");
           res.json().then((data) => {
-            globalStore.tokenId.push(data.idToken)
-            localStorage.setItem('tokenId', JSON.stringify(data.idToken));
-
+            localStorage.setItem('token', JSON.stringify(data.idToken));
+            localStorage.setItem('isLogin', JSON.stringify(true));
+            localStorage.setItem('userEmail', JSON.stringify(data.email));
+            let token =  JSON.parse(localStorage.getItem("token"));
+            let userEmail =  JSON.parse(localStorage.getItem("userEmail"));
+            dispatch(authActions.login(token));
+            dispatch(authActions.setLoginEmail(userEmail));
           });
         } else {
-          res.json().then((data) => alert(data.error.message));
-        }
-      });
-    }
-    // ----------------------------------Sing-Up(firbase)----------------------------------//
-    else {
-      const enteredconPassword = conPassword.current.value;
-      if (enteredPassword === enteredconPassword) {
-        alert("password not match");
-      }
-
-      fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBoRlualxztzphJyEheAtArD6hJ7SrPdSc",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: enteredEmail,
-            password: enteredPassword,
-            returnSecureToken: true,
-          }),
-        }
-      ).then((res) => {
-        if (res.ok) {
-          console.log("User has successfully signed up.");
-          alert("Sign-up successfully ");
-          dispatch({ type: "enter" });
           res.json().then((data) => {
-            globalStore.tokenId.push(data.idToken)
-            localStorage.setItem('tokenId', JSON.stringify(data.idToken));
-           });
-        } else {
-          res.json().then((data) => alert(data.error.message));
+            console.log(data);
+            alert(data.error.message)
+          });
         }
       });
+    } else {
+      let conPasswordEntered = conPassword.current.value;
+      if (passwordEntered !== conPasswordEntered) {
+        alert("Password not match");
+      } else {
+        fetch(
+          "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC1Vr94fVHuelrVU6rME2nh0CZCazXFuSQ",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              email: emailEntered,
+              password: passwordEntered,
+              returnSecureToken: true,
+            }),
+          }
+        ).then((res) => {
+          if (res.ok) {
+            console.log("User has successfully signed up.");
+            alert("Sign-up successfully ");
+          } else {
+            res.json().then((data) => alert(data.error.message));
+          }
+        });
+      }
     }
   }
+  function sendLinkForPasswordUpdate() {
+    let passwordEmailEntered = passwordEmail.current.value;
+
+    fetch(
+      "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyC1Vr94fVHuelrVU6rME2nh0CZCazXFuSQ",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email: passwordEmailEntered,
+          requestType: "PASSWORD_RESET",
+        }),
+      }
+    ).then((res) => {
+      if (res.ok) {
+        alert("Change password link send check your mail box");
+      } else {
+        res.json().then((data) => alert(data.error.message));
+      }
+    });
+  }
   return (
-    <div>
-      <form>
-        <h1>{globalStore.isLogin ? "Login" : "signUp"}</h1>
-        <input type="text" placeholder="Email" required ref={email} />
-        <input type="password" placeholder="Password" required ref={password} />
-        {!globalStore.isLogin && (
-          <input
-            type="password"
-            placeholder="confirm Password"
-            required
-            ref={conPassword}
-          />
-        )}
-        <button onClick={sendFormData}>
-          {globalStore.isLogin ? "Login" : "Sign-Up"}
-        </button>
-        {globalStore.isLogin && <Link to="/forgot">forgot ?</Link>}
-        <button onClick={() => changeAuthPage()}>
-          {globalStore.isLogin
-            ? "create new account? sign-up now "
-            : "Already have account ! login now "}
-        </button>
-      </form>
+    <div className="authForm">
+      {!forgotPassword && (
+        <form onSubmit={formHandler}>
+          <div className="authForm">
+            <h1> {isLogin ? "Login" : "Sign-up"}</h1>
+            <input type="text" placeholder="Email" required ref={email} />
+            <input
+              type="password"
+              placeholder="Password"
+              required
+              ref={password}
+            />
+            {!isLogin && (
+              <input
+                type="password"
+                placeholder="confirm Password"
+                required
+                ref={conPassword}
+              />
+            )}
+            <button>{isLogin ? "Login" : "Sign-up"}</button>
+            {isLogin && (
+              <Link
+                className="link"
+                to="/forgotpassword"
+                onClick={() => dispatch(authActions.forgot())}
+              >
+                forgot password
+              </Link>
+            )}
+            <Link onClick={changeLoginState} className="link">
+              {isLogin
+                ? "Want to creat a new account !"
+                : "have a account ? login"}
+            </Link>
+          </div>
+        </form>
+      )}
+      {forgotPassword && (
+        <div className="forgotPassword">
+          <form>
+            <label>Enter the email with which you have registered :</label>
+            <br />
+            <input type="text" ref={passwordEmail} placeholder="abc@gmail.com" />
+          </form>
+          <button onClick={sendLinkForPasswordUpdate}>send link</button>
+          <button onClick={() => dispatch(authActions.forgot())}>back</button>
+        </div>
+      )}
     </div>
   );
 }
