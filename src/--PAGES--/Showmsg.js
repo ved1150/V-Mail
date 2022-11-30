@@ -1,18 +1,23 @@
 import React from "react";
-
-export default function Showmsg() {
+import { useDispatch, useSelector } from "react-redux";
+import { PopActions } from "../Store/Pop";
+export default function Showmsg(props) {
+  console.log(props)
+  let dispatch = useDispatch()
+  const item = useSelector(state => state.pop.item)
+  console.log(item)
   return (
-    <div className="mail-message">
-      <div>
-        <h1>My First Letter</h1>
+    <div className="mail-message" style={OVERLAY}>
+      <div style={STYLE}>
+        <img onClick={() => dispatch(PopActions.isOpen())} style={{width:"30px" ,height: "30px",position: "absolute",left: 0 ,top : 10}} src="https://cdn-icons-png.flaticon.com/128/2459/2459427.png"/>
+        <h1>{item.subject}</h1>
         <div className="sender-options">
           <img src="http://placekitten.com/g/48/48" />
-          <div> 
-            <div className="sender-name">Jane Doe</div>
-            <a href="#">@janedoe</a>
+          <div>
+            <a href="#">{item.emailFrom}</a>
           </div>
           <ul>
-            <li>7/6/2014</li>
+            <li>{item.date}</li>
             <li>
               <span className="fa fa-mail-reply"></span>
             </li>
@@ -22,26 +27,29 @@ export default function Showmsg() {
           </ul>
         </div>
         <div className="mail-message-body">
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque at
-            vestibulum lorem. Suspendisse id tortor condimentum, malesuada odio
-            vitae, vehicula metus. Praesent mattis sem id mauris rutrum, mollis
-            condimentum elit ornare. Maecenas in tortor convallis, laoreet orci
-            id, suscipit sapien. Duis eu dolor leo. Praesent non posuere lacus.
-            Donec sodales eget libero id condimentum.
-          </p>
-          <p>
-            Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
-            posuere cubilia Curae; Phasellus pretium elit ut massa eleifend
-            sodales. Cras sem dui, egestas a tincidunt pretium, fringilla id
-            diam. Phasellus diam lectus, condimentum nec molestie sed, tincidunt
-            bibendum dui. Nam eu nisi lobortis, rutrum sem id, euismod felis.
-            Sed sit amet arcu eget ipsum scelerisque feugiat. Vestibulum congue
-            semper ligula ut malesuada. Vestibulum sit amet accumsan eros. Ut
-            sit amet volutpat lectus.
+          <p>{item.text}</p>
+          <p>................................................................................................
+
           </p>
         </div>
       </div>
     </div>
   );
 }
+const STYLE = {
+  position: "fixed",
+  left: "22% ",
+  top: "10% ",
+  zIndex: 1000,
+  padding: "50px",
+  backgroundColor: "#fff",
+};
+
+const OVERLAY = {
+  position: "fixed",
+  top: 0,
+  bottom: 0,
+  right: 0,
+  left: 0,
+  backgroundColor: "rgba(0,0,0,0.3)",
+};

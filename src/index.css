@@ -79,7 +79,7 @@ code {
 .mail-message {
   background: rgb(252, 242, 247);
   height: 100%;
-  width: calc(100% - 180px - 260px);
+  width: 100%;
   margin: 0;
   padding: 0;
   overflow-y: scroll;

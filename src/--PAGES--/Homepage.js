@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Homepage.css";
 import { useDispatch, useSelector } from "react-redux";
+import Showmsg from "./Showmsg";
 import {
   Link,
   BrowserRouter as Router,
@@ -8,10 +9,15 @@ import {
   Route,
   Redirect,
 } from "react-router-dom";
+import { PopActions } from "../Store/Pop";
 import { inboxActions } from "../Store/InboxReducer";
 import { openMailActions } from "../Store/OpenMailReducer";
 import inboxMail from "./InboxMail";
+import { addListener, current } from "@reduxjs/toolkit";
 export default function Homepage() {
+  const [render, setRender] = useState(0);
+  const popOpen = useSelector(state => state.pop.open)
+  const [isOpen , setISOpen] = useState(false)
   const dispatch = useDispatch();
   const loginEmail = JSON.parse(localStorage.getItem("userEmail"));
   let userEmail = loginEmail.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
@@ -23,6 +29,7 @@ export default function Homepage() {
       `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${userEmail}.json`
     ).then((res) => {
       if (res.ok) {
+        setRender((pre) => pre + 1);
         res.json().then((data) => {
           let arr = [];
           {
@@ -41,7 +48,7 @@ export default function Homepage() {
         res.json().then((data) => console.log(data));
       }
     });
-  }, []);
+  }, [render]);
   function userClickOnMail(emailFrom, subject, text) {
     let obj = {
       emailFrom: emailFrom,
@@ -54,6 +61,26 @@ export default function Homepage() {
     localStorage.clear();
     window.location.reload();
   }
+  function hideThePop(){
+    console.log("click")
+    setISOpen(false)
+}
+ function deleteMsg(id){
+  alert("delete")
+  fetch(
+    `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${userEmail}/${id}.json`,
+    {
+      method: "DELETE",
+    }
+  ).then((res) => {
+    if (res.ok) {
+      setRender((pre) => pre - 1);
+      alert("Expense successfuly deleted 💸");
+    } else {
+      res.json().then((data) => alert(data.error.message));
+    }
+  });
+ }
   return (
     <div className="container">
       <div className="mail-box">
@@ -115,8 +142,8 @@ export default function Homepage() {
             <h3>Inbox</h3>
           </div>
 
-          <Link to="/showMsg" ><table className="table table-inbox table-hover" >
-            <tbody>
+          <table className="table table-inbox table-hover">
+            <tbody  >
               {inboxMails.map((item) => {
                 return (
                   <>
@@ -124,21 +151,24 @@ export default function Homepage() {
                       <td className="inbox-small-cells">
                         <input type="checkbox" className="mail-checkbox" />
                       </td>
-                      <td className="inbox-small-cells"></td>
-                      <td className="view-message  dont-show">{item.emailFrom}</td>
-                      <td className="view-message ">
+                      <td className="inbox-small-cells" onClick={() => dispatch(PopActions.isOpen(item))}></td>
+                      <td className="view-message  dont-show" onClick={() => dispatch(PopActions.isOpen(item))}>{item.emailFrom}</td>
+                      <td className="view-message " onClick={() => dispatch(PopActions.isOpen(item))}>
                        {item.subject}
                       </td>
-                      <td className="view-message  inbox-small-cells"></td>
-                      <td className="view-message  text-right">{item.date}</td>
+                      <img src="https://cdn-icons-png.flaticon.com/512/9039/9039011.png" alt="" className="view-message  inbox-small-cells" style={{width:"30px", height : "30px"}}  onClick={() => deleteMsg(item.id)}/>
+                      <td className="view-message  text-right" onClick={() => dispatch(PopActions.isOpen(item))}>{item.date} </td>
                     </tr>
+                    {popOpen && <Showmsg />}
                   </>
                 );
+                
               })}
             </tbody>
-          </table></Link>
+          </table>
         </aside>
       </div>
+     
     </div>
   );
 }
