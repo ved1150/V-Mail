@@ -1,54 +1,53 @@
-import React, { useRef, useState , useEffect} from "react";
+//import
+import React, { useRef, useState } from "react";
 import { Editor } from "react-draft-wysiwyg";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { useSelector ,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { composeActions } from "../Store/ComposeReducer";
 export default function ComposePage() {
-  // let Email ;
-  const resiveMail = useSelector((state) => state.compose.list);
-  console.log(resiveMail)
-  const dispatch = useDispatch()
-  const emailId= useSelector(state => state.auth.loginEmail)
-  let sentEmail = emailId.replace(
-    /[&,+()$~%@.'":*?<>{}]/g,
-    ""
-  );
-  console.log(emailId)
-  const state = useSelector(state => state)
-  console.log(state)
+  //----useRef----//
   const email = useRef();
-  const subject = useRef(); 
+  const subject = useRef();
+
+  //----redux----//
+  const dispatch = useDispatch();
+  const userEmail = useSelector((state) => state.auth.loginEmail);
+  let myEmail = userEmail.replace(/[&,+()$~%@.'":*?<>{}]/g, ""); 
+
+  //----for text extention----//
   const [text, setText] = useState("");
-  const [render, setRender] = useState(0);
+
+  //----send email----//
   async function send(event) {
     event.preventDefault();
+
+    //----entered info----//
     const enteredEmail = email.current.value;
-    dispatch(composeActions.setEmail(enteredEmail))
+    dispatch(composeActions.setEmail(enteredEmail));
     const enteredSubject = subject.current.value;
-    let userEmail = enteredEmail.replace(
-      /[&,+()$~%@.'":*?<>{}]/g,
-      ""
-    );
+    let userEmail = enteredEmail.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
+
+    //----sending date of email----//
     const date = new Date();
 
     let day = date.getDate();
     let month = date.getMonth() + 1;
     let year = date.getFullYear();
-    
+
     let currentDate = `${day}-${month}-${year}`;
 
-    // POST TO UNDER OTHER MAIL (FOR other PERSON )
+    //----'POST' request for other person(resiver of email)----//
     fetch(
       `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${userEmail}.json`,
       {
         method: "POST",
         body: JSON.stringify({
-          emailFrom : emailId,
+          emailFrom: userEmail,
           email: enteredEmail,
           subject: enteredSubject,
           text: text,
-          date : currentDate
+          date: currentDate,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -56,24 +55,23 @@ export default function ComposePage() {
       }
     ).then((res) => {
       if (res.ok) {
-        setRender((pre) => pre + 1);
         alert("Your mail is send");
       } else {
         res.json().then((data) => alert(data.error.message));
       }
     });
 
-     // POST TO self  MAIL (FOR sent method )
-     fetch(
-      `https://v-mail-a0a46-default-rtdb.firebaseio.com/sent/${sentEmail}.json`,
+     //----'POST' request for self(resiver of email in "sent" )----//
+    fetch(
+      `https://v-mail-a0a46-default-rtdb.firebaseio.com/sent/${myEmail}.json`,
       {
         method: "POST",
         body: JSON.stringify({
-          emailFrom : emailId,
+          emailFrom: userEmail,
           email: enteredEmail,
           subject: enteredSubject,
           text: text,
-          date : currentDate
+          date: currentDate,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -81,18 +79,18 @@ export default function ComposePage() {
       }
     ).then((res) => {
       if (res.ok) {
-        setRender((pre) => pre + 1);
       } else {
         res.json().then((data) => console.log("error from sent post"));
       }
     });
-}
- 
+  }
+  //----V-DOM----//
   return (
-    <div>
+    <div className="compose">
+      
       <div>
-        <label>To:</label>
-        <input type="email" ref={email} required />
+        <label className="to">To:</label>
+        <input type="email" ref={email} required  style={{ border: "none", outline: "none" }} />
       </div>
       <hr />
       <input
@@ -107,9 +105,9 @@ export default function ComposePage() {
         onContentStateChange={(x) => setText(x.blocks[0].text)}
         required
       />
-      <button onClick={send}>send</button>
+      <button onClick={send} className="sendbtn">Send</button>
       <Link to="/inbox">
-        <button>Back to Home</button>
+        <button className="backbtn">❌</button>
       </Link>
     </div>
   );

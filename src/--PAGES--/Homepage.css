@@ -1,12 +1,13 @@
+
 .inbox .email{
     display:inline-block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 25ch;
+    /* max-width: 25ch;  */
     padding-right: 100px ;
-    width: 25%;
 }
+
 .inbox .subject{
     display:inline-block;
     white-space: nowrap;
@@ -67,7 +68,6 @@ font-size: 20px;
 .homepage .main{
     display: flex;
 }
-inbox-body
 .mail-box {
     border-collapse: collapse;
     border-spacing: 0;

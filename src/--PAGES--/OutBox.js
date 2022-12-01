@@ -6,13 +6,14 @@ import { composeActions } from "../Store/ComposeReducer";
 export default function OutBox() {
   const dispatch = useDispatch();
   const resiveMail = useSelector((state) => state.compose.list);
-  const emailId = useSelector((state) => state.auth.loginEmail);
-  let sentEmail = emailId.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
+  const loginEmail = JSON.parse(localStorage.getItem("userEmail"));
+  let userEmail = loginEmail.replace(/[&,+()$~%@.'":*?<>{}]/g, "");
+  console.log(userEmail);
   console.log(resiveMail);
   // console.log(globalStore.emails);
     useEffect(() => {
       fetch(
-        `https://v-mail-a0a46-default-rtdb.firebaseio.com/mail/${sentEmail}.json`
+        `https://v-mail-a0a46-default-rtdb.firebaseio.com/sent/${userEmail}.json`
       ).then((res) => {
         if (res.ok) {
           res.json().then((data) => {
